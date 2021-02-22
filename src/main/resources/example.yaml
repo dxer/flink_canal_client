@@ -1,0 +1,23 @@
+app.name: example
+thread.num: 5
+flink.parallelism.num: 1
+flink.checkpoint.interval: 30000
+
+# source
+source.kafka.bootstrap.servers: ip1:9092,ip2:9092,ip3:9092
+source.kafka.group.id: example
+source.kafka.topic: [ "1","2","3" ]
+source.kafka.topic.partition.offset: [ ]
+
+
+# sink
+sink.rdb.jdbc.url:
+sink.rdb.jdbc.driver:
+sink.rdb.jdbc.username:
+sink.rdb.jdbc.password:
+
+# task
+tasks:
+  - { table: test1, target.database: xqc_adw, target.table: test1 }
+  - { table: test2, target.database: xqc_adw, target.table: test1 }
+  - { table: test3, target.database: xqc_adw, target.table: test3 }
