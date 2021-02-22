@@ -1,5 +1,6 @@
 package org.dxer.flink.canal.client.entity;
 
+import org.dxer.flink.canal.client.ConfigConstants;
 import org.dxer.flink.canal.client.util.JdbcTypeUtil;
 
 import java.io.Serializable;
@@ -34,6 +35,7 @@ public class SingleMessage implements Serializable {
 
     private String type;
 
+    private String sql;
 
     public String getTopic() {
         return topic;
@@ -123,6 +125,14 @@ public class SingleMessage implements Serializable {
         this.type = type;
     }
 
+    public String getSql() {
+        return sql;
+    }
+
+    public void setSql(String sql) {
+        this.sql = sql;
+    }
+
     /**
      * message 解析，canal 中一条数据可以能包含对多条数据进行操作
      *
@@ -133,40 +143,55 @@ public class SingleMessage implements Serializable {
         List<SingleMessage> singleMessages = null;
         if (msg != null) {
             singleMessages = new ArrayList<>();
-            List<Map<String, Object>> data = msg.getData();
-            List<Map<String, Object>> old = msg.getOld();
-            Map<String, String> mysqlTypes = msg.getMysqlType();
-            Map<String, Integer> sqlTypes = msg.getSqlType();
-            String table = msg.getTable();
 
-            for (int i = 0; i < data.size(); i++) {
+            if (ConfigConstants.ALTER.equals(msg.getType())) {
                 SingleMessage singleMessage = new SingleMessage();
-                Map<String, Object> newData = new HashMap<>();
 
-                for (String columnName : mysqlTypes.keySet()) {
-                    Integer sqlType = sqlTypes.get(columnName);
-                    String mysqlType = mysqlTypes.get(columnName);
-
-                    Object obj = data.get(i).get(columnName);
-                    String columnValue = obj != null ? (String) data.get(i).get(columnName) : null;
-
-                    if (mysqlType == null) {
-                        newData.put(columnName.toLowerCase(), columnValue); // 没有匹配到对应的 mysqlType, 直接使用原始值
-                        continue;
-                    }
-                    Object finalValue = JdbcTypeUtil.typeConvert(table, columnName, columnValue, sqlType, mysqlType); // 将数据转化为对应的类型
-                    newData.put(columnName.toLowerCase(), finalValue); // 统一用小写
-                }
-
-                singleMessage.setData(newData);
                 singleMessage.setDatabase(msg.getDatabase());
                 singleMessage.setTable(msg.getTable());
-                singleMessage.setType(msg.getType());
+                singleMessage.setSql(msg.getSql());
+                singleMessage.setTable(msg.getType());
+
+                if(msg.getSql().contains("DROP COLUMN") || msg.getSql().contains("ADD COLUMN")){
+                    singleMessages.add(singleMessage);
+                }
+            } else if (ConfigConstants.INSERT.equals(msg.getType()) || ConfigConstants.INSERT.equals(msg.getType()) || ConfigConstants.INSERT.equals(msg.getType())) {
+                List<Map<String, Object>> data = msg.getData();
+                // List<Map<String, Object>> old = msg.getOld();
+                Map<String, String> mysqlTypes = msg.getMysqlType();
+                Map<String, Integer> sqlTypes = msg.getSqlType();
+                String table = msg.getTable();
+
+                for (int i = 0; i < data.size(); i++) {
+                    SingleMessage singleMessage = new SingleMessage();
+                    Map<String, Object> newData = new HashMap<>();
+
+                    for (String columnName : mysqlTypes.keySet()) { // 修改数据类型
+                        Integer sqlType = sqlTypes.get(columnName);
+                        String mysqlType = mysqlTypes.get(columnName);
+
+                        Object obj = data.get(i).get(columnName);
+                        String columnValue = obj != null ? (String) data.get(i).get(columnName) : null;
+
+                        if (mysqlType == null) {
+                            newData.put(columnName.toLowerCase(), columnValue); // 没有匹配到对应的 mysqlType, 直接使用原始值
+                            continue;
+                        }
+                        Object finalValue = JdbcTypeUtil.typeConvert(table, columnName, columnValue, sqlType, mysqlType); // 将数据转化为对应的类型
+                        newData.put(columnName.toLowerCase(), finalValue); // 统一用小写
+                    }
+
+
+                    singleMessage.setData(newData);
+                    singleMessage.setDatabase(msg.getDatabase());
+                    singleMessage.setTable(msg.getTable());
+                    singleMessage.setType(msg.getType());
 //                if (old != null) {
 //                    singleMessage.setOld(old.get(i));
 //                }
 
-                singleMessages.add(singleMessage);
+                    singleMessages.add(singleMessage);
+                }
             }
         }
         return singleMessages;

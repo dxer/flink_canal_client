@@ -9,11 +9,13 @@ public class RowData implements Serializable {
 
     private String table;
     private String sql;
+    private String type;
     private List<Object> values;
 
-    public RowData(String table, String sql, List<Object> values) {
+    public RowData(String table, String type, String sql, List<Object> values) {
         this.table = table;
         this.sql = sql;
+        this.type = type;
         this.values = values;
     }
 
@@ -39,5 +41,13 @@ public class RowData implements Serializable {
 
     public void setValues(List<Object> values) {
         this.values = values;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

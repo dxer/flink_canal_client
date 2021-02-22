@@ -36,4 +36,13 @@ public class ConfigConstants {
 
     public static final String SINK_RDB_JDBC_PASSWORD = "sink.rdb.jdbc.password";
 
+
+    public static final String INSERT = "INSERT";
+
+    public static final String UPDATE = "UPDATE";
+
+    public static final String DELETE = "DELETE";
+
+    public static final String ALTER = "ALTER";
+
 }

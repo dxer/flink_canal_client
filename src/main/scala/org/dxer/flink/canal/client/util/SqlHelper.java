@@ -23,6 +23,7 @@ public class SqlHelper {
     public static RowData insert(SingleMessage message) {
         String table = message.getTable();
         List<String> pkNames = message.getPkNames();
+        String type = message.getType();
 
         StringBuilder insertSql = new StringBuilder();
         insertSql.append("INSERT INTO ")
@@ -57,13 +58,15 @@ public class SqlHelper {
         insertSql.append(" ON DUPLICATE KEY UPDATE ")
                 .append(update.toString());
         list.addAll(list1);
-        return new RowData(table, insertSql.toString(), list);
+        return new RowData(table, type, insertSql.toString(), list);
     }
 
     public static RowData deleteSQLPstmtMDBuilder(SingleMessage message) {
         StringBuilder deleteSql = new StringBuilder();
         String table = message.getTable();
         List<String> pkNames = message.getPkNames();
+        String type = message.getType();
+
 
         Map<String, Object> data = message.getData();
 
@@ -77,7 +80,7 @@ public class SqlHelper {
         int len = deleteSql.length();
         deleteSql.delete(len - 4, len);
 
-        return new RowData(table, deleteSql.toString(), values);
+        return new RowData(table, type, deleteSql.toString(), values);
     }
 
 }

@@ -2,6 +2,7 @@ package org.dxer.flink.canal.client.rdb;
 
 import com.alibaba.fastjson.JSON;
 import com.zaxxer.hikari.HikariDataSource;
+import org.dxer.flink.canal.client.ConfigConstants;
 import org.dxer.flink.canal.client.entity.RowData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 public class SyncWorkThread implements Runnable {
 
     private static Logger LOG = LoggerFactory.getLogger(SyncWorkThread.class);
-
 
     private CyclicBarrier barrier;
 
@@ -69,7 +69,11 @@ public class SyncWorkThread implements Runnable {
                         pstmt.setObject(i, values.get(i));
                     }
                 }
-                pstmt.executeUpdate();
+                if (ConfigConstants.ALTER.equals(data.getType())) { // 执行alter语句
+                    pstmt.execute();
+                } else {
+                    pstmt.executeUpdate();
+                }
             } catch (SQLException e) {
                 LOG.error("SyncWorkThread process data[{}]: {}, err: {}", retry, JSON.toJSONString(data), e); // TODO
                 if (retry >= MAX_RETRY_TIMES) {

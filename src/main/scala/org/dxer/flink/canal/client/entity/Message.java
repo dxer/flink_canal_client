@@ -32,6 +32,8 @@ public class Message implements Serializable {
 
     private String type;
 
+    private String sql;
+
     public List<Map<String, Object>> getData() {
         return data;
     }
@@ -122,5 +124,19 @@ public class Message implements Serializable {
         this.type = type;
     }
 
+    public Long getEs() {
+        return es;
+    }
 
+    public Long getTs() {
+        return ts;
+    }
+
+    public String getSql() {
+        return sql;
+    }
+
+    public void setSql(String sql) {
+        this.sql = sql;
+    }
 }
