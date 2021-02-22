@@ -29,7 +29,9 @@ public class RdbSyncSink extends RichSinkFunction<SingleMessage> implements Chec
 
     private CyclicBarrier cyclicBarrier;
     private AppConfig appConfig;
+
     private int threadNum = 1;
+
     private List<LinkedBlockingQueue<RowData>> queues = new ArrayList<>();
     private static final int DEFAULT_QUEUE_CAPACITY = 1000;
 
