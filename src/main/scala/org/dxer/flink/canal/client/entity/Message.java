@@ -8,6 +8,12 @@ public class Message implements Serializable {
 
     private static final long serialVersionUID = 2611556444074013268L;
 
+    private String topic;
+
+    private Integer partitionId;
+
+    private Long offset;
+
     private List<Map<String, Object>> data;
 
     private List<Map<String, Object>> old;
@@ -26,13 +32,38 @@ public class Message implements Serializable {
 
     private Map<String, String> mysqlType;
 
-    private Map<String,Integer> sqlType;
+    private Map<String, Integer> sqlType;
 
     private List<String> pkNames;
 
     private String type;
 
     private String sql;
+
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
+    }
+
+    public Integer getPartitionId() {
+        return partitionId;
+    }
+
+    public void setPartitionId(Integer partitionId) {
+        this.partitionId = partitionId;
+    }
+
+    public Long getOffset() {
+        return offset;
+    }
+
+    public void setOffset(Long offset) {
+        this.offset = offset;
+    }
 
     public List<Map<String, Object>> getData() {
         return data;

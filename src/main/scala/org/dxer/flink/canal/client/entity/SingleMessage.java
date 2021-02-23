@@ -1,7 +1,7 @@
 package org.dxer.flink.canal.client.entity;
 
 import org.dxer.flink.canal.client.ConfigConstants;
-import org.dxer.flink.canal.client.util.JdbcTypeUtil;
+import org.dxer.flink.canal.client.util.JdbcUtil;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -14,6 +14,8 @@ public class SingleMessage implements Serializable {
     private static final long serialVersionUID = 2611556444074013268L;
 
     private String topic;
+
+    private Integer partitionId;
 
     private Long offset;
 
@@ -43,6 +45,14 @@ public class SingleMessage implements Serializable {
 
     public void setTopic(String topic) {
         this.topic = topic;
+    }
+
+    public Integer getPartitionId() {
+        return partitionId;
+    }
+
+    public void setPartitionId(Integer partitionId) {
+        this.partitionId = partitionId;
     }
 
     public Long getOffset() {
@@ -152,10 +162,10 @@ public class SingleMessage implements Serializable {
                 singleMessage.setSql(msg.getSql());
                 singleMessage.setTable(msg.getType());
 
-                if(msg.getSql().contains("DROP COLUMN") || msg.getSql().contains("ADD COLUMN")){
+                if (msg.getSql().contains("DROP COLUMN") || msg.getSql().contains("ADD COLUMN")) {
                     singleMessages.add(singleMessage);
                 }
-            } else if (ConfigConstants.INSERT.equals(msg.getType()) || ConfigConstants.INSERT.equals(msg.getType()) || ConfigConstants.INSERT.equals(msg.getType())) {
+            } else if (ConfigConstants.INSERT.equals(msg.getType()) || ConfigConstants.UPDATE.equals(msg.getType()) || ConfigConstants.DELETE.equals(msg.getType())) {
                 List<Map<String, Object>> data = msg.getData();
                 // List<Map<String, Object>> old = msg.getOld();
                 Map<String, String> mysqlTypes = msg.getMysqlType();
@@ -177,15 +187,24 @@ public class SingleMessage implements Serializable {
                             newData.put(columnName.toLowerCase(), columnValue); // 没有匹配到对应的 mysqlType, 直接使用原始值
                             continue;
                         }
-                        Object finalValue = JdbcTypeUtil.typeConvert(table, columnName, columnValue, sqlType, mysqlType); // 将数据转化为对应的类型
+                        Object finalValue = JdbcUtil.typeConvert(table, columnName, columnValue, sqlType, mysqlType); // 将数据转化为对应的类型
                         newData.put(columnName.toLowerCase(), finalValue); // 统一用小写
                     }
+
+                    singleMessage.setTopic(msg.getTopic());
+                    singleMessage.setOffset(msg.getOffset());
 
 
                     singleMessage.setData(newData);
                     singleMessage.setDatabase(msg.getDatabase());
                     singleMessage.setTable(msg.getTable());
+                    singleMessage.setSql(msg.getSql());
+                    singleMessage.setPkNames(msg.getPkNames());
+                    singleMessage.setTs(msg.getTs());
+                    singleMessage.setEs(msg.getEs());
                     singleMessage.setType(msg.getType());
+
+
 //                if (old != null) {
 //                    singleMessage.setOld(old.get(i));
 //                }
@@ -195,5 +214,24 @@ public class SingleMessage implements Serializable {
             }
         }
         return singleMessages;
+    }
+
+    @Override
+    public String toString() {
+        return "SingleMessage{" +
+                "topic='" + topic + '\'' +
+                ", partitionId=" + partitionId +
+                ", offset=" + offset +
+                ", data=" + data +
+                ", old=" + old +
+                ", database='" + database + '\'' +
+                ", table='" + table + '\'' +
+                ", es=" + es +
+                ", ts=" + ts +
+                ", isDdl=" + isDdl +
+                ", pkNames=" + pkNames +
+                ", type='" + type + '\'' +
+                ", sql='" + sql + '\'' +
+                '}';
     }
 }

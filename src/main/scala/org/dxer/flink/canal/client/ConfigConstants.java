@@ -17,9 +17,22 @@ public class ConfigConstants {
     // kafka source
     public static final String SOURCE_KAFKA_BOOTSTRAP_SERVERS = "source.kafka.bootstrap.servers";
 
-    public static final String SOURCE_KAFKA_TOPICS = "source.kafka.topic";
+    public static final String SOURCE_KAFKA_TOPICS = "source.kafka.topics";
+
+    public static final String SOURCE_KAFKA_TOPIC = "topic";
 
     public static final String SOURCE_KAFKA_GROUP_ID = "source.kafka.group.id";
+
+
+    public static final String STARTUP_MODE = "startup.mode"; // 'earliest', 'latest', 'group', 'timestamp' and 'specific'
+    public static final String STARTUP_SPECIFIC_OFFSETS = "startup.specific-offsets"; // partition:0,offset:42;partition:1,offset:300
+    public static final String STARTUP_TIMESTAMP = "startup.timestamp-millis";
+
+    public static final String STARTUP_MODE_EARLIEST = "earliest";
+    public static final String STARTUP_MODE_LATEST = "latest";
+    public static final String STARTUP_MODE_TIMESTAMP = "timestamp";
+    public static final String STARTUP_MODE_SPECIFIC = "specific";
+
 
     // kafka sink
     public static final String SINK_PRODUCER_BOOTSTRAP_SERVERS = "sink.kafka.bootstrap.servers";
@@ -44,5 +57,15 @@ public class ConfigConstants {
     public static final String DELETE = "DELETE";
 
     public static final String ALTER = "ALTER";
+
+    public static final String SYNC_TASKS = "tasks";
+
+    public static final String TASK_SOURCE = "source";
+
+    public static final String TASK_TARGET = "target";
+
+    public static final String TASK_DATABASE = "db";
+
+    public static final String TASK_TABLE = "table";
 
 }

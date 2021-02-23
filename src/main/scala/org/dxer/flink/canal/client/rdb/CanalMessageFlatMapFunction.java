@@ -4,17 +4,21 @@ import com.alibaba.fastjson.JSON;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple5;
 import org.apache.flink.util.Collector;
+import org.dxer.flink.canal.client.AppConfig;
 import org.dxer.flink.canal.client.entity.Message;
 import org.dxer.flink.canal.client.entity.SingleMessage;
+import org.dxer.flink.canal.client.entity.TaskInfo;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-public class MessageFlatMapFunction implements FlatMapFunction<Tuple5<String, String, String, Integer, Long>, SingleMessage> {
+public class CanalMessageFlatMapFunction implements FlatMapFunction<Tuple5<String, String, String, Integer, Long>, SingleMessage> {
 
-    private List<String> syncTables = null;
+    private Map<String, String> dbMapping = null;
 
-    public MessageFlatMapFunction(List<String> tables) {
-        this.syncTables = tables;
+    public CanalMessageFlatMapFunction(AppConfig appConfig) {
+        dbMapping = appConfig.getDBMappings();
     }
 
     @Override
@@ -22,12 +26,15 @@ public class MessageFlatMapFunction implements FlatMapFunction<Tuple5<String, St
         // 过滤需要的表，过滤需要的
         Message message = JSON.parseObject(value.f1, Message.class);
         if (message != null) {
+            String database = message.getDatabase();
             String table = message.getTable();
-            if (syncTables != null && syncTables.contains(table.trim().toString())) {
+            String fullTableName = database.trim() + "." + table.trim();
+            if (dbMapping.containsKey(fullTableName)) {  // 进行过滤
                 List<SingleMessage> singleMessages = SingleMessage.message2SingleMessages(message);
                 singleMessages.forEach(x -> {
                     x.setTopic(value.f2); // 设置主题
                     x.setOffset(value.f4); // 设置偏移量
+                    x.setPartitionId(value.f3); // 设置分区id
                     out.collect(x); // 数据继续往下传递
                 });
             }

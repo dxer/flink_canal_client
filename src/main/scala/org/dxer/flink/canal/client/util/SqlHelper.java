@@ -9,25 +9,27 @@ import java.util.Map;
 
 public class SqlHelper {
 
-    public static RowData buildSQL(SingleMessage message) {
+    public static RowData buildSQL(SingleMessage message, String fullTableName) {
         String type = message.getType();
 
         if (type.equals("DELETE")) {
-            return null;
+            return delete(message, fullTableName);
         } else if (type.equals("INSERT") || type.equals("UPDATE")) {
-            return insert(message);
+            return insert(message, fullTableName);
+        } else if (type.equals("ALTER")) {
+
         }
         return null;
     }
 
-    public static RowData insert(SingleMessage message) {
+    public static RowData insert(SingleMessage message, String fullTableName) {
         String table = message.getTable();
         List<String> pkNames = message.getPkNames();
         String type = message.getType();
 
         StringBuilder insertSql = new StringBuilder();
         insertSql.append("INSERT INTO ")
-                .append(message.getTable())
+                .append(fullTableName)
                 .append(" (");
 
         StringBuilder values = new StringBuilder();
@@ -58,10 +60,10 @@ public class SqlHelper {
         insertSql.append(" ON DUPLICATE KEY UPDATE ")
                 .append(update.toString());
         list.addAll(list1);
-        return new RowData(table, type, insertSql.toString(), list);
+        return new RowData(fullTableName, type, insertSql.toString(), list);
     }
 
-    public static RowData deleteSQLPstmtMDBuilder(SingleMessage message) {
+    public static RowData delete(SingleMessage message, String fullTableName) {
         StringBuilder deleteSql = new StringBuilder();
         String table = message.getTable();
         List<String> pkNames = message.getPkNames();
@@ -72,7 +74,7 @@ public class SqlHelper {
 
         List<Object> values = new ArrayList<>();
 
-        deleteSql.append("DELETE FROM ").append(table).append(" WHERE ");
+        deleteSql.append("DELETE FROM ").append(fullTableName).append(" WHERE ");
         for (String key : pkNames) {
             deleteSql.append(key).append("=? AND ");
             values.add(data.get(key));
@@ -80,7 +82,7 @@ public class SqlHelper {
         int len = deleteSql.length();
         deleteSql.delete(len - 4, len);
 
-        return new RowData(table, type, deleteSql.toString(), values);
+        return new RowData(fullTableName, type, deleteSql.toString(), values);
     }
 
 }

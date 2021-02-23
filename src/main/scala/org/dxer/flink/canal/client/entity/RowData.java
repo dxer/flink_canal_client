@@ -50,4 +50,14 @@ public class RowData implements Serializable {
     public void setType(String type) {
         this.type = type;
     }
+
+    @Override
+    public String toString() {
+        return "RowData{" +
+                "table='" + table + '\'' +
+                ", sql='" + sql + '\'' +
+                ", type='" + type + '\'' +
+                ", values=" + values +
+                '}';
+    }
 }

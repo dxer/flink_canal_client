@@ -59,7 +59,8 @@ public class RdbSyncSink extends RichSinkFunction<SingleMessage> implements Chec
 
     @Override
     public void open(Configuration parameters) throws Exception {
-        this.cyclicBarrier = new CyclicBarrier(threadNum + 1);
+        this.threadNum = appConfig.getDBMappings().size() >= 5 ? 5 : appConfig.getDBMappings().size();
+        this.cyclicBarrier = new CyclicBarrier(this.threadNum + 1);
 
         String url = appConfig.getString(ConfigConstants.SINK_RDB_JDBC_URL);
         String driver = appConfig.getString(ConfigConstants.SINK_RDB_JDBC_DRIVER);
@@ -69,13 +70,13 @@ public class RdbSyncSink extends RichSinkFunction<SingleMessage> implements Chec
 
         HikariDataSource hikariDataSource = newHikariDataSource(url, driver, username, password);
 
-        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(threadNum, threadNum, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(this.threadNum, this.threadNum, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
         for (int i = 0; i < threadNum; i++) { // 新建线程
             LinkedBlockingQueue<RowData> queue = new LinkedBlockingQueue<>(DEFAULT_QUEUE_CAPACITY); // 一个线程一个队列
             threadPoolExecutor.execute(new SyncWorkThread(hikariDataSource, cyclicBarrier, queue));
             queues.add(queue);
         }
-        LOG.info("There are {} threads created.", threadNum);
+        LOG.info("There are {} threads created.", this.threadNum);
 
 
     }
@@ -92,7 +93,8 @@ public class RdbSyncSink extends RichSinkFunction<SingleMessage> implements Chec
 
     @Override
     public void invoke(SingleMessage message, Context context) throws Exception {
-        RowData metaData = SqlHelper.buildSQL(message);
+        String fullTableName = message.getDatabase() + "." + message.getTable();
+        RowData metaData = SqlHelper.buildSQL(message, appConfig.getDBMappings().get(fullTableName));
 
         int index = metaData.getTable().hashCode() % queues.size();
         LinkedBlockingQueue<RowData> queue = queues.get(index);

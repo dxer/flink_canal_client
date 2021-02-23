@@ -54,24 +54,29 @@ public class SyncWorkThread implements Runnable {
         }
     }
 
+    private void process1(RowData data) {
+        if (data == null) return;
+        System.out.println(data.getSql());
+    }
+
+
     private void process(RowData data) {
         if (data == null) return;
-
         PreparedStatement pstmt = null;
         Connection connection = null;
         for (int retry = 1; retry <= MAX_RETRY_TIMES; retry++) {
             try {
                 connection = hikariDataSource.getConnection();
                 pstmt = connection.prepareStatement(data.getSql());
-                List<Object> values = data.getValues();
-                if (values != null) {
-                    for (int i = 1; i <= values.size(); i++) {
-                        pstmt.setObject(i, values.get(i));
-                    }
-                }
                 if (ConfigConstants.ALTER.equals(data.getType())) { // 执行alter语句
                     pstmt.execute();
-                } else {
+                } else { // 执行 insert、delete、update
+                    List<Object> values = data.getValues();
+                    if (values != null) {
+                        for (int i = 1; i <= values.size(); i++) {
+                            pstmt.setObject(i, values.get(i-1));
+                        }
+                    }
                     pstmt.executeUpdate();
                 }
             } catch (SQLException e) {
