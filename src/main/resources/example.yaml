@@ -6,8 +6,13 @@ flink.checkpoint.interval: 30000
 # source
 source.kafka.bootstrap.servers: ip1:9092,ip2:9092,ip3:9092
 source.kafka.group.id: example
-source.kafka.topic: [ "1","2","3" ]
-source.kafka.topic.partition.offset: [ ]
+source.kafka.topics:
+  - { topic: test1, startup.mode: earliest-offset }
+  - { topic: test2, startup.mode: latest-offset }
+  - { topic: test3, startup.mode: group-offset }
+  - { topic: test4, startup.mode: specific-offset, startup.specific-offsets: 'partition:0,offset:42;partition:1,offset:300' }
+  - { topic: test5, startup.mode: timestamp , startup.timestamp-millis: 1614043655225 }
+
 
 
 # sink
@@ -18,6 +23,6 @@ sink.rdb.jdbc.password:
 
 # task
 tasks:
-  - { table: test1, target.database: xqc_adw, target.table: test1 }
-  - { table: test2, target.database: xqc_adw, target.table: test1 }
-  - { table: test3, target.database: xqc_adw, target.table: test3 }
+  - { source: { db: a, table: test1 }, target: { db: b, table: test1 } }
+  - { source: { db: a, table: test2 }, target: { db: b, table: test2 } }
+  - { source: { db: a, table: test3 }, target: { db: b, table: test3 } }
