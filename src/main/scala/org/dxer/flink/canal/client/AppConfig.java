@@ -97,7 +97,6 @@ public class AppConfig implements Serializable {
 
         for (int i = 0; i < list.size(); i++) {
             Map<String, String> map = list.get(i);
-
             String topic = map.get(ConfigConstants.SOURCE_KAFKA_TOPIC);
             topics.add(topic);
 
@@ -143,9 +142,6 @@ public class AppConfig implements Serializable {
             LinkedHashMap<String, String> source = map.get(ConfigConstants.TASK_SOURCE);
             LinkedHashMap<String, String> target = map.get(ConfigConstants.TASK_TARGET);
 
-            System.out.println(source);
-            System.out.println(target);
-
             TaskInfo taskInfo = new TaskInfo();
             taskInfo.setSrcDatabase(source.get(ConfigConstants.TASK_DATABASE));
             taskInfo.setSrcTable(source.get(ConfigConstants.TASK_TABLE));
@@ -153,7 +149,6 @@ public class AppConfig implements Serializable {
             taskInfo.setTargetTable(target.get(ConfigConstants.TASK_TABLE));
 
             dbMapping.put(taskInfo.getSrcDatabase() + "." + taskInfo.getSrcTable(), taskInfo.getTargetDatabase() + "." + taskInfo.getTargetTable());
-
             taskInfos.add(taskInfo);
         }
     }

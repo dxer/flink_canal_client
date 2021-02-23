@@ -21,7 +21,6 @@ public class RdbSyncService {
 
     private static Logger LOG = LoggerFactory.getLogger(RdbSyncService.class);
 
-
     public static void main(String[] args) throws Exception {
         ParameterTool tool = ParameterTool.fromArgs(args); // 解析参数
 

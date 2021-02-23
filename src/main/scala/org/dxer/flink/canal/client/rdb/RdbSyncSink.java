@@ -26,7 +26,6 @@ public class RdbSyncSink extends RichSinkFunction<SingleMessage> implements Chec
 
     private static Logger LOG = LoggerFactory.getLogger(RdbSyncSink.class);
 
-
     private CyclicBarrier cyclicBarrier;
     private AppConfig appConfig;
 
@@ -77,8 +76,6 @@ public class RdbSyncSink extends RichSinkFunction<SingleMessage> implements Chec
             queues.add(queue);
         }
         LOG.info("There are {} threads created.", this.threadNum);
-
-
     }
 
     @Override
