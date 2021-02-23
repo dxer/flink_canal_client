@@ -18,7 +18,7 @@ public class CanalMessageFlatMapFunction implements FlatMapFunction<Tuple5<Strin
     private Map<String, String> dbMapping = null;
 
     public CanalMessageFlatMapFunction(AppConfig appConfig) {
-        dbMapping = appConfig.getDBMappings();
+        this.dbMapping = appConfig.getDBMappings();
     }
 
     @Override

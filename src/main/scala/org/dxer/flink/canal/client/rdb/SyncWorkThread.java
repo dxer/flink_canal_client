@@ -73,8 +73,8 @@ public class SyncWorkThread implements Runnable {
                 } else { // 执行 insert、delete、update
                     List<Object> values = data.getValues();
                     if (values != null) {
-                        for (int i = 1; i <= values.size(); i++) {
-                            pstmt.setObject(i, values.get(i-1));
+                        for (int i = 0; i < values.size(); i++) {
+                            pstmt.setObject(i + 1, values.get(i));
                         }
                     }
                     pstmt.executeUpdate();

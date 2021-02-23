@@ -37,6 +37,7 @@ public class RdbSyncSink extends RichSinkFunction<SingleMessage> implements Chec
 
     public RdbSyncSink(AppConfig appConfig) {
         this.appConfig = appConfig;
+        this.threadNum = appConfig.getThreadNum();
     }
 
     private HikariDataSource newHikariDataSource(String url, String driver, String username, String password) {
@@ -58,7 +59,9 @@ public class RdbSyncSink extends RichSinkFunction<SingleMessage> implements Chec
 
     @Override
     public void open(Configuration parameters) throws Exception {
-        this.threadNum = appConfig.getDBMappings().size() >= 5 ? 5 : appConfig.getDBMappings().size();
+        this.threadNum = this.threadNum >= 5 ? this.threadNum : 5;
+        this.threadNum = appConfig.getDBMappings().size() >= this.threadNum ? this.threadNum : appConfig.getDBMappings().size();
+
         this.cyclicBarrier = new CyclicBarrier(this.threadNum + 1);
 
         String url = appConfig.getString(ConfigConstants.SINK_RDB_JDBC_URL);
@@ -66,11 +69,9 @@ public class RdbSyncSink extends RichSinkFunction<SingleMessage> implements Chec
         String username = appConfig.getString(ConfigConstants.SINK_RDB_JDBC_USERNAME);
         String password = appConfig.getString(ConfigConstants.SINK_RDB_JDBC_PASSWORD);
 
-
         HikariDataSource hikariDataSource = newHikariDataSource(url, driver, username, password);
-
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(this.threadNum, this.threadNum, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
-        for (int i = 0; i < threadNum; i++) { // 新建线程
+        for (int i = 0; i < this.threadNum; i++) { // 新建线程
             LinkedBlockingQueue<RowData> queue = new LinkedBlockingQueue<>(DEFAULT_QUEUE_CAPACITY); // 一个线程一个队列
             threadPoolExecutor.execute(new SyncWorkThread(hikariDataSource, cyclicBarrier, queue));
             queues.add(queue);

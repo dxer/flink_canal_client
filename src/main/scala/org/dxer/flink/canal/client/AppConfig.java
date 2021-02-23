@@ -26,7 +26,7 @@ public class AppConfig implements Serializable {
 
     public void init() throws Exception {
         Yaml yaml = new Yaml();
-        map = yaml.load(new FileInputStream(file));
+        this.map = yaml.load(new FileInputStream(file));
         initTasks();
     }
 
