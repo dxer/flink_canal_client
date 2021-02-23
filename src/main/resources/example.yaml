@@ -7,11 +7,10 @@ flink.checkpoint.interval: 30000
 source.kafka.bootstrap.servers: ip1:9092,ip2:9092,ip3:9092
 source.kafka.group.id: example
 source.kafka.topics:
-  - { topic: test1, startup.mode: earliest-offset }
-  - { topic: test2, startup.mode: latest-offset }
-  - { topic: test3, startup.mode: group-offset }
-  - { topic: test4, startup.mode: specific-offset, startup.specific-offsets: 'partition:0,offset:42;partition:1,offset:300' }
-  - { topic: test5, startup.mode: timestamp , startup.timestamp-millis: 1614043655225 }
+  - { topic: test1, startup.mode: earliest }
+  - { topic: test2, startup.mode: latest }
+  - { topic: test3, startup.mode: group }
+  - { topic: test4, startup.mode: specific, startup.specific-offsets: 'partition0:42,partition1:300' }
 
 
 
