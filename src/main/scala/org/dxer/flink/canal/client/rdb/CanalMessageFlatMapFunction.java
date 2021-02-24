@@ -29,7 +29,7 @@ public class CanalMessageFlatMapFunction implements FlatMapFunction<Tuple5<Strin
             String database = message.getDatabase();
             String table = message.getTable();
             String fullTableName = database.trim() + "." + table.trim();
-            if (dbMapping.containsKey(fullTableName)) {  // 进行过滤
+            if (dbMapping.containsKey(fullTableName)) {  // 进行过滤，选择配置了的表
                 List<SingleMessage> singleMessages = SingleMessage.message2SingleMessages(message);
                 singleMessages.forEach(x -> {
                     x.setTopic(value.f2); // 设置主题

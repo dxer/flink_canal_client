@@ -9,7 +9,7 @@ import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.dxer.flink.canal.client.AppConfig;
 import org.dxer.flink.canal.client.ConfigConstants;
-import org.dxer.flink.canal.client.entity.RowData;
+import org.dxer.flink.canal.client.entity.SQLCommand;
 import org.dxer.flink.canal.client.entity.SingleMessage;
 import org.dxer.flink.canal.client.util.SqlHelper;
 import org.slf4j.Logger;
@@ -31,7 +31,7 @@ public class RdbSyncSink extends RichSinkFunction<SingleMessage> implements Chec
 
     private int threadNum = 1;
 
-    private List<LinkedBlockingQueue<RowData>> queues = new ArrayList<>();
+    private List<LinkedBlockingQueue<SQLCommand>> queues = new ArrayList<>();
     private static final int DEFAULT_QUEUE_CAPACITY = 1000;
 
 
@@ -72,7 +72,7 @@ public class RdbSyncSink extends RichSinkFunction<SingleMessage> implements Chec
         HikariDataSource hikariDataSource = newHikariDataSource(url, driver, username, password);
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(this.threadNum, this.threadNum, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
         for (int i = 0; i < this.threadNum; i++) { // 新建线程
-            LinkedBlockingQueue<RowData> queue = new LinkedBlockingQueue<>(DEFAULT_QUEUE_CAPACITY); // 一个线程一个队列
+            LinkedBlockingQueue<SQLCommand> queue = new LinkedBlockingQueue<>(DEFAULT_QUEUE_CAPACITY); // 一个线程一个队列
             threadPoolExecutor.execute(new SyncWorkThread(hikariDataSource, cyclicBarrier, queue));
             queues.add(queue);
         }
@@ -92,10 +92,13 @@ public class RdbSyncSink extends RichSinkFunction<SingleMessage> implements Chec
     @Override
     public void invoke(SingleMessage message, Context context) throws Exception {
         String fullTableName = message.getDatabase() + "." + message.getTable();
-        RowData metaData = SqlHelper.buildSQL(message, appConfig.getDBMappings().get(fullTableName));
+        SQLCommand metaData = SqlHelper.buildSQL(message, appConfig.getDBMappings().get(fullTableName));
+        if (metaData == null || metaData.isValid()) { // 验证是否有效
+            return;
+        }
 
         int index = metaData.getTable().hashCode() % queues.size();
-        LinkedBlockingQueue<RowData> queue = queues.get(index);
+        LinkedBlockingQueue<SQLCommand> queue = queues.get(index);
 
         if (queue != null) {
             queue.put(metaData);

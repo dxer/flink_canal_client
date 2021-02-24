@@ -3,7 +3,7 @@ package org.dxer.flink.canal.client.rdb;
 import com.alibaba.fastjson.JSON;
 import com.zaxxer.hikari.HikariDataSource;
 import org.dxer.flink.canal.client.ConfigConstants;
-import org.dxer.flink.canal.client.entity.RowData;
+import org.dxer.flink.canal.client.entity.SQLCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,14 +21,14 @@ public class SyncWorkThread implements Runnable {
 
     private CyclicBarrier barrier;
 
-    private LinkedBlockingQueue<RowData> bufferQueue;
+    private LinkedBlockingQueue<SQLCommand> bufferQueue;
 
     private HikariDataSource hikariDataSource;
 
     private final int MAX_RETRY_TIMES = 3; // 最大重试次数
 
 
-    public SyncWorkThread(HikariDataSource hikariDataSource, CyclicBarrier barrier, LinkedBlockingQueue<RowData> queue) {
+    public SyncWorkThread(HikariDataSource hikariDataSource, CyclicBarrier barrier, LinkedBlockingQueue<SQLCommand> queue) {
         this.hikariDataSource = hikariDataSource;
         this.barrier = barrier;
         this.bufferQueue = queue;
@@ -36,13 +36,13 @@ public class SyncWorkThread implements Runnable {
 
     @Override
     public void run() {
-        RowData data = null;
+        SQLCommand cmd = null;
         try {
             while (true) {
-                data = bufferQueue.poll(50, TimeUnit.MILLISECONDS);
+                cmd = bufferQueue.poll(50, TimeUnit.MILLISECONDS);
 
-                if (data != null) {
-                    process(data);
+                if (cmd != null) {
+                    process(cmd);
                 } else {
                     if (barrier.getNumberWaiting() > 0) {
                         barrier.await();
@@ -54,24 +54,29 @@ public class SyncWorkThread implements Runnable {
         }
     }
 
-    private void process1(RowData data) {
+    /**
+     * 测试使用
+     *
+     * @param data
+     */
+    private void printProcess(SQLCommand data) {
         if (data == null) return;
-        System.out.println(data.getSql());
+        System.out.println(JSON.toJSONString(data));
     }
 
 
-    private void process(RowData data) {
-        if (data == null) return;
+    private void process(SQLCommand cmd) {
+        if (cmd == null) return;
         PreparedStatement pstmt = null;
         Connection connection = null;
-        for (int retry = 1; retry <= MAX_RETRY_TIMES; retry++) {
+        for (int retry = 1; retry <= MAX_RETRY_TIMES; retry++) { // 最多执行三次
             try {
                 connection = hikariDataSource.getConnection();
-                pstmt = connection.prepareStatement(data.getSql());
-                if (ConfigConstants.ALTER.equals(data.getType())) { // 执行alter语句
+                pstmt = connection.prepareStatement(cmd.getSql());
+                if (ConfigConstants.ALTER.equals(cmd.getType())) { // 执行alter语句
                     pstmt.execute();
                 } else { // 执行 insert、delete、update
-                    List<Object> values = data.getValues();
+                    List<Object> values = cmd.getValues();
                     if (values != null) {
                         for (int i = 0; i < values.size(); i++) {
                             pstmt.setObject(i + 1, values.get(i));
@@ -80,7 +85,7 @@ public class SyncWorkThread implements Runnable {
                     pstmt.executeUpdate();
                 }
             } catch (SQLException e) {
-                LOG.error("SyncWorkThread process data[{}]: {}, err: {}", retry, JSON.toJSONString(data), e); // TODO
+                LOG.error("SyncWorkThread process data[{}]: {}, err: {}", retry, JSON.toJSONString(cmd), e); // TODO
                 if (retry >= MAX_RETRY_TIMES) {
                     throw new RuntimeException("SyncWorkThread process error.", e);
                 }

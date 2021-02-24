@@ -1,5 +1,8 @@
 package org.dxer.flink.canal.client;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * This class contains all constants for the configuration. That includes the configuration keys and
  * the default values.
@@ -57,6 +60,16 @@ public class ConfigConstants {
     public static final String DELETE = "DELETE";
 
     public static final String ALTER = "ALTER";
+
+
+    public static final List<String> allowTypes = new ArrayList<>();
+
+    static {
+        allowTypes.add(INSERT);
+        allowTypes.add(UPDATE);
+        allowTypes.add(DELETE);
+        allowTypes.add(ALTER);
+    }
 
     public static final String SYNC_TASKS = "tasks";
 
