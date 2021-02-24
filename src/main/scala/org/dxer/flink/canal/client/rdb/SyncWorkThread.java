@@ -3,7 +3,6 @@ package org.dxer.flink.canal.client.rdb;
 import com.alibaba.fastjson.JSON;
 import com.zaxxer.hikari.HikariDataSource;
 import org.dxer.flink.canal.client.ConfigConstants;
-import org.dxer.flink.canal.client.entity.SQLCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

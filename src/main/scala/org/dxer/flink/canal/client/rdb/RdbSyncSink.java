@@ -9,9 +9,8 @@ import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.dxer.flink.canal.client.AppConfig;
 import org.dxer.flink.canal.client.ConfigConstants;
-import org.dxer.flink.canal.client.entity.SQLCommand;
 import org.dxer.flink.canal.client.entity.SingleMessage;
-import org.dxer.flink.canal.client.util.SqlHelper;
+import org.dxer.flink.canal.client.rdb.util.SqlHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

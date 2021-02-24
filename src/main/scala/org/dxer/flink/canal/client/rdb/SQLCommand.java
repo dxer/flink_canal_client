@@ -1,4 +1,4 @@
-package org.dxer.flink.canal.client.entity;
+package org.dxer.flink.canal.client.rdb;
 
 import org.apache.flink.shaded.guava18.com.google.common.base.Strings;
 import org.dxer.flink.canal.client.ConfigConstants;

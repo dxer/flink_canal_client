@@ -1,6 +1,6 @@
-package org.dxer.flink.canal.client.util;
+package org.dxer.flink.canal.client.rdb.util;
 
-import org.dxer.flink.canal.client.entity.SQLCommand;
+import org.dxer.flink.canal.client.rdb.SQLCommand;
 import org.dxer.flink.canal.client.entity.SingleMessage;
 
 import java.util.ArrayList;
