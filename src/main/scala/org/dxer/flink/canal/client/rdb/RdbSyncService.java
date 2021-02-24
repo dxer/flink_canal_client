@@ -58,9 +58,9 @@ public class RdbSyncService {
                 appConfig.getKafkaSourceProps());
 
         // 获取自定义的偏移量配置
-        KafkaAndPartitionInfo info = appConfig.getKafkaAndPartitionInfo();
         // 获取应当设置的偏移量
-        Map<KafkaTopicPartition, Long> groupOffsets = KafkaUtils.getConsumerTopicPartitionOffsets(appConfig.getKafkaSourceProps(), info.getTopics(), info.getSpecificOffsets(), info.getStartupModes());
+        Map<KafkaTopicPartition, Long> groupOffsets = KafkaUtils.getConsumerTopicPartitionOffsets(appConfig.getKafkaSourceProps(),
+                kapInfo.getTopics(), kapInfo.getSpecificOffsets(), kapInfo.getStartupModes());
         // 手动设置偏移量
         if (groupOffsets != null && !groupOffsets.isEmpty()) {
             consumer.setStartFromSpecificOffsets(groupOffsets);
