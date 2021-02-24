@@ -1,7 +1,8 @@
 package org.dxer.flink.canal.client.rdb.util;
 
-import org.dxer.flink.canal.client.rdb.SQLCommand;
+import org.apache.flink.shaded.guava18.com.google.common.base.Strings;
 import org.dxer.flink.canal.client.entity.SingleMessage;
+import org.dxer.flink.canal.client.rdb.SQLRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,21 +10,20 @@ import java.util.Map;
 
 public class SqlHelper {
 
-    public static SQLCommand buildSQL(SingleMessage message, String fullTableName) {
+    public static SQLRequest buildSQL(SingleMessage message, String fullTableName) {
+        SQLRequest req = null;
         String type = message.getType();
-
         if (type.equals("DELETE")) {
-            return delete(message, fullTableName);
+            req = delete(message, fullTableName);
         } else if (type.equals("INSERT") || type.equals("UPDATE")) {
-            return insert(message, fullTableName);
-        } else if (type.equals("ALTER")) {
-            return alter(message, fullTableName);
+            req = insert(message, fullTableName);
+        } else if (type.equals("ALTER") && !Strings.isNullOrEmpty(message.getSql())) {
+            req = alter(message, fullTableName);
         }
-        return null;
+        return req;
     }
 
-    public static SQLCommand insert(SingleMessage message, String fullTableName) {
-        String table = message.getTable();
+    public static SQLRequest insert(SingleMessage message, String fullTableName) {
         List<String> pkNames = message.getPkNames();
         String type = message.getType();
 
@@ -60,12 +60,11 @@ public class SqlHelper {
         insertSql.append(" ON DUPLICATE KEY UPDATE ")
                 .append(update.toString());
         list.addAll(list1);
-        return new SQLCommand(fullTableName, type, insertSql.toString(), list);
+        return new SQLRequest(fullTableName, type, insertSql.toString(), list);
     }
 
-    public static SQLCommand delete(SingleMessage message, String fullTableName) {
+    public static SQLRequest delete(SingleMessage message, String fullTableName) {
         StringBuilder deleteSql = new StringBuilder();
-        String table = message.getTable();
         List<String> pkNames = message.getPkNames();
         String type = message.getType();
 
@@ -82,11 +81,15 @@ public class SqlHelper {
         int len = deleteSql.length();
         deleteSql.delete(len - 4, len);
 
-        return new SQLCommand(fullTableName, type, deleteSql.toString(), values);
+        return new SQLRequest(fullTableName, type, deleteSql.toString(), values);
     }
 
-    private static SQLCommand alter(SingleMessage message, String fullTableName) {
-        return new SQLCommand(fullTableName, message.getType(), message.getSql(), null);
+    private static SQLRequest alter(SingleMessage message, String fullTableName) {
+        String database = message.getDatabase();
+        String table = message.getTable();
+        String replaceBefore = String.format("`%s`.`%s`", database, table);
+        String sql = message.getSql().replace(replaceBefore, fullTableName);
+        return new SQLRequest(fullTableName, message.getType(), sql, null);
     }
 
 }

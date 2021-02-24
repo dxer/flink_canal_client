@@ -160,7 +160,8 @@ public class SingleMessage implements Serializable {
                 singleMessage.setDatabase(msg.getDatabase());
                 singleMessage.setTable(msg.getTable());
                 singleMessage.setSql(msg.getSql());
-                singleMessage.setTable(msg.getType());
+                singleMessage.setTable(msg.getTable());
+                singleMessage.setType(msg.getType());
 
                 if (msg.getSql().contains("DROP COLUMN") || msg.getSql().contains("ADD COLUMN")) {
                     singleMessages.add(singleMessage);

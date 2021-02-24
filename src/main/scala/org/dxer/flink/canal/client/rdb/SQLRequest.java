@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.util.List;
 
 
-public class SQLCommand implements Serializable {
+public class SQLRequest implements Serializable {
 
     private static final long serialVersionUID = 2611556444074013268L;
 
@@ -16,7 +16,7 @@ public class SQLCommand implements Serializable {
     private String type;
     private List<Object> values;
 
-    public SQLCommand(String table, String type, String sql, List<Object> values) {
+    public SQLRequest(String table, String type, String sql, List<Object> values) {
         this.table = table;
         this.sql = sql;
         this.type = type;
@@ -56,14 +56,14 @@ public class SQLCommand implements Serializable {
     }
 
     public Boolean isValid() {
-        return ConfigConstants.allowTypes.contains(this.table) &&
+        return ConfigConstants.allowTypes.contains(this.type) &&
                 !Strings.isNullOrEmpty(sql) &&
                 !Strings.isNullOrEmpty(table);
     }
 
     @Override
     public String toString() {
-        return "SQLCommand{" +
+        return "SQLRequest{" +
                 "table='" + table + '\'' +
                 ", sql='" + sql + '\'' +
                 ", type='" + type + '\'' +

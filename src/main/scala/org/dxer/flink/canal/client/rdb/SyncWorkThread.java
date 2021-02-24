@@ -20,14 +20,14 @@ public class SyncWorkThread implements Runnable {
 
     private CyclicBarrier barrier;
 
-    private LinkedBlockingQueue<SQLCommand> bufferQueue;
+    private LinkedBlockingQueue<SQLRequest> bufferQueue;
 
     private HikariDataSource hikariDataSource;
 
     private final int MAX_RETRY_TIMES = 3; // 最大重试次数
 
 
-    public SyncWorkThread(HikariDataSource hikariDataSource, CyclicBarrier barrier, LinkedBlockingQueue<SQLCommand> queue) {
+    public SyncWorkThread(HikariDataSource hikariDataSource, CyclicBarrier barrier, LinkedBlockingQueue<SQLRequest> queue) {
         this.hikariDataSource = hikariDataSource;
         this.barrier = barrier;
         this.bufferQueue = queue;
@@ -35,7 +35,7 @@ public class SyncWorkThread implements Runnable {
 
     @Override
     public void run() {
-        SQLCommand cmd = null;
+        SQLRequest cmd = null;
         try {
             while (true) {
                 cmd = bufferQueue.poll(50, TimeUnit.MILLISECONDS);
@@ -58,24 +58,24 @@ public class SyncWorkThread implements Runnable {
      *
      * @param data
      */
-    private void printProcess(SQLCommand data) {
+    private void printProcess(SQLRequest data) {
         if (data == null) return;
         System.out.println(JSON.toJSONString(data));
     }
 
 
-    private void process(SQLCommand cmd) {
-        if (cmd == null) return;
+    private void process(SQLRequest req) {
+        if (req == null) return;
         PreparedStatement pstmt = null;
         Connection connection = null;
         for (int retry = 1; retry <= MAX_RETRY_TIMES; retry++) { // 最多执行三次
             try {
                 connection = hikariDataSource.getConnection();
-                pstmt = connection.prepareStatement(cmd.getSql());
-                if (ConfigConstants.ALTER.equals(cmd.getType())) { // 执行alter语句
+                pstmt = connection.prepareStatement(req.getSql());
+                if (ConfigConstants.ALTER.equals(req.getType())) { // 执行alter语句
                     pstmt.execute();
                 } else { // 执行 insert、delete、update
-                    List<Object> values = cmd.getValues();
+                    List<Object> values = req.getValues();
                     if (values != null) {
                         for (int i = 0; i < values.size(); i++) {
                             pstmt.setObject(i + 1, values.get(i));
@@ -84,9 +84,13 @@ public class SyncWorkThread implements Runnable {
                     pstmt.executeUpdate();
                 }
             } catch (SQLException e) {
-                LOG.error("SyncWorkThread process data[{}]: {}, err: {}", retry, JSON.toJSONString(cmd), e); // TODO
-                if (retry >= MAX_RETRY_TIMES) {
-                    throw new RuntimeException("SyncWorkThread process error.", e);
+                if (e.getMessage() != null && (e.getMessage().contains("Duplicate column name") || e.getMessage().contains("Can't DROP "))) {
+
+                } else {
+                    LOG.error("SyncWorkThread process data[{}]: {}, err: {}", retry, JSON.toJSONString(req), e); // TODO
+                    if (retry >= MAX_RETRY_TIMES) {
+                        throw new RuntimeException("SyncWorkThread process error.", e);
+                    }
                 }
             } finally {
                 if (pstmt != null) {

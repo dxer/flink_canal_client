@@ -7,9 +7,7 @@ import org.apache.flink.util.Collector;
 import org.dxer.flink.canal.client.AppConfig;
 import org.dxer.flink.canal.client.entity.Message;
 import org.dxer.flink.canal.client.entity.SingleMessage;
-import org.dxer.flink.canal.client.entity.TaskInfo;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 

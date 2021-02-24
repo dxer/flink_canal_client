@@ -30,7 +30,7 @@ public class RdbSyncSink extends RichSinkFunction<SingleMessage> implements Chec
 
     private int threadNum = 1;
 
-    private List<LinkedBlockingQueue<SQLCommand>> queues = new ArrayList<>();
+    private List<LinkedBlockingQueue<SQLRequest>> queues = new ArrayList<>();
     private static final int DEFAULT_QUEUE_CAPACITY = 1000;
 
 
@@ -71,7 +71,7 @@ public class RdbSyncSink extends RichSinkFunction<SingleMessage> implements Chec
         HikariDataSource hikariDataSource = newHikariDataSource(url, driver, username, password);
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(this.threadNum, this.threadNum, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
         for (int i = 0; i < this.threadNum; i++) { // 新建线程
-            LinkedBlockingQueue<SQLCommand> queue = new LinkedBlockingQueue<>(DEFAULT_QUEUE_CAPACITY); // 一个线程一个队列
+            LinkedBlockingQueue<SQLRequest> queue = new LinkedBlockingQueue<>(DEFAULT_QUEUE_CAPACITY); // 一个线程一个队列
             threadPoolExecutor.execute(new SyncWorkThread(hikariDataSource, cyclicBarrier, queue));
             queues.add(queue);
         }
@@ -90,19 +90,19 @@ public class RdbSyncSink extends RichSinkFunction<SingleMessage> implements Chec
 
     @Override
     public void invoke(SingleMessage message, Context context) throws Exception {
-        String fullTableName = message.getDatabase() + "." + message.getTable();
-        SQLCommand metaData = SqlHelper.buildSQL(message, appConfig.getDBMappings().get(fullTableName));
-        if (metaData == null || metaData.isValid()) { // 验证是否有效
+        String fullTableName = message.getDatabase() + "." + message.getTable(); // 原始库名+表名
+        SQLRequest req = SqlHelper.buildSQL(message, appConfig.getDBMappings().get(fullTableName));
+        if (req == null || !req.isValid()) { // 验证是否有效
             return;
         }
-
-        int index = metaData.getTable().hashCode() % queues.size();
-        LinkedBlockingQueue<SQLCommand> queue = queues.get(index);
+        
+        int index = req.getTable().hashCode() % queues.size();
+        LinkedBlockingQueue<SQLRequest> queue = queues.get(index);
 
         if (queue != null) {
-            queue.put(metaData);
+            queue.put(req);
         } else {
-            LOG.error("{}#{}#{} not match any queue", metaData.getTable(), metaData.getSql(), metaData.getValues());
+            LOG.error("{}#{}#{} not match any queue", req.getTable(), req.getSql(), req.getValues());
         }
     }
 }
