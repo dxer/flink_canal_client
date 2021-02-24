@@ -43,32 +43,34 @@ public class RdbSyncService {
         }
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(1); // 设置并行度 appConfig.getInt(ConfigConstants.PARALLELISM_NUM)
+        if (appConfig.getInt(ConfigConstants.PARALLELISM_NUM) != null) {
+            env.setParallelism(appConfig.getInt(ConfigConstants.PARALLELISM_NUM)); // 设置并行度
+        }
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
         env.enableCheckpointing(appConfig.getInt(ConfigConstants.CHECKPOINT_INTERVAL)); // 设置 checkpoint 间隔时间
 
         KafkaAndPartitionInfo kapInfo = appConfig.getKafkaAndPartitionInfo();
 
+        // 构造 FlinkKafkaConsumer
         FlinkKafkaConsumer<Tuple5<String, String, String, Integer, Long>> consumer = new FlinkKafkaConsumer<>(
                 kapInfo.getTopics(),
                 new CustomKafkaDeserializationSchema(),
                 appConfig.getKafkaSourceProps());
 
-        // 获取自定义的偏移量
+        // 获取自定义的偏移量配置
         KafkaAndPartitionInfo info = appConfig.getKafkaAndPartitionInfo();
-        // 手动设置的偏移量
+        // 获取应当设置的偏移量
         Map<KafkaTopicPartition, Long> groupOffsets = KafkaUtils.getConsumerTopicPartitionOffsets(appConfig.getKafkaSourceProps(), info.getTopics(), info.getSpecificOffsets(), info.getStartupModes());
-
+        // 手动设置偏移量
         if (groupOffsets != null && !groupOffsets.isEmpty()) {
             consumer.setStartFromSpecificOffsets(groupOffsets);
         }
 
         DataStream<Tuple5<String, String, String, Integer, Long>> dataStream = env.addSource(consumer);
-        dataStream.flatMap(new CanalMessageFlatMapFunction(appConfig)).name("CanalMessageFlatMapFunction")
-                //.print();
+        dataStream.flatMap(new CanalMessageFlatMapFunction(appConfig)).name("CanalMessageFlatMapFunction") //.print();
                 .addSink(new RdbSyncSink(appConfig)).name("RdbSyncSink");
 
-        env.execute("RdbService#" + appConfig.getAppName());
+        env.execute("RdbSyncService#" + appConfig.getAppName());
     }
 }
 
