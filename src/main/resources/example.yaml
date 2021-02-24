@@ -15,10 +15,10 @@ source.kafka.topics:
 
 
 # sink
-sink.rdb.jdbc.url:
-sink.rdb.jdbc.driver:
-sink.rdb.jdbc.username:
-sink.rdb.jdbc.password:
+sink.rdb.jdbc.url: jdbc:mysql://127.0.0.1:3306?useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8&useSSL=false&autoReconnect=true&connectTimeout=120000&socketTimeout=12000
+sink.rdb.jdbc.driver: com.mysql.jdbc.Driver
+sink.rdb.jdbc.username: root
+sink.rdb.jdbc.password: root
 
 # task
 tasks:
