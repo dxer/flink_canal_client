@@ -11,7 +11,7 @@ public class KafkaAndPartitionInfo {
 
     private Map<String, String> startupModes;
 
-    private Map<String, Long> timestampOffsets;
+    private Map<String, Long> timestampOffsets; // 暂未使用
 
     public List<String> getTopics() {
         return topics;
