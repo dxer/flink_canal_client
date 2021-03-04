@@ -20,9 +20,9 @@ import java.util.Map;
 /**
  *
  */
-public class RdbSyncService {
+public class RdbSyncServiceV2 {
 
-    private static Logger LOG = LoggerFactory.getLogger(RdbSyncService.class);
+    private static Logger LOG = LoggerFactory.getLogger(RdbSyncServiceV2.class);
 
     public static void main(String[] args) throws Exception {
         ParameterTool tool = ParameterTool.fromArgs(args); // 解析参数
@@ -70,7 +70,7 @@ public class RdbSyncService {
         dataStream.flatMap(new CanalMessageFlatMapFunction(appConfig)).name("CanalMessageFlatMapFunction") //.print();
                 .addSink(new RdbSyncSink(appConfig)).name("RdbSyncSink");
 
-        env.execute("RdbSyncService#" + appConfig.getAppName());
+        env.execute("RdbSyncServiceV2#" + appConfig.getAppName());
     }
 }
 
